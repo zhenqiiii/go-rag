@@ -32,3 +32,18 @@ func UploadDocument() gin.HandlerFunc {
 		})
 	}
 }
+
+// DeleteDocument 删除文件路由
+func DeleteDocument() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 接收文件信息
+		// 进行删除操作：向量库删除所有切片
+	}
+}
+
+// GetDocuments 获取文档列表
+func GetDocuments() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 从sqlite中读取文档id并返回
+	}
+}

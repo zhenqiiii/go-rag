@@ -1,10 +1,17 @@
 package main
 
-import "go-rag/api"
+import (
+	"fmt"
+	"go-rag/config"
+	"log"
+)
 
 func main() {
-	// router
-	r := api.SetupRouter()
+	// 加载配置文件
+	config, err := config.LoadConfig("config/config.yaml")
+	if err != nil {
+		log.Fatalf("加载配置失败： %v", err)
+	}
 
-	r.Run()
+	fmt.Printf("配置调试：%+v", config)
 }

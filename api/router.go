@@ -16,10 +16,13 @@ func SetupRouter() *gin.Engine {
 	// RAG功能路由组
 	rag := r.Group("api/rag")
 	{
-		// 接收问题路由
+		// 查询路由
 		rag.POST("/query", handlers.RAGQuery())
-		// 上传文件路由
+
+		// 文档管理
 		rag.POST("/upload", handlers.UploadDocument())
+		rag.POST("/delete/:id", handlers.DeleteDocument())
+		rag.GET("/documents", handlers.GetDocuments())
 	}
 
 	return r
