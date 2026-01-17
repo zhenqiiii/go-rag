@@ -10,7 +10,7 @@
 - Docker容器化
 
 RAG：
-- 数据分块：手搓分块器
+- 数据分块：`gojieba`
 - 向量化Embedding模型：`待定`
 - 向量存储：Qdrant向量数据库
 - Chat模型：`待定`
