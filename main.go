@@ -36,5 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("切割错误: %v", err)
 	}
-	fmt.Printf("%+v", chunks)
+	for _, chunk := range chunks {
+		fmt.Printf("\n %+v \n", chunk)
+	}
 }

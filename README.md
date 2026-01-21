@@ -24,5 +24,5 @@ RAG：
 分割策略:固定长度切分,同时在标点符号处切分 
 
 效果: <br/>
-![chunker效果测试](asset/chunker_result.png)
+![chunker效果测试](asset/chunk_result.png)
 
