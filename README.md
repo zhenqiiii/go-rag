@@ -26,3 +26,13 @@ RAG：
 效果: <br/>
 ![chunker效果测试](asset/chunk_result.png)
 
+#### embedder
+
+分为`embeddingClient`和`embedder`两个部分
+
+`embeddingClient`：负责发送embedding请求，接收响应并返回 <br/>
+
+`embedder`：是整个pipeline中的embed组件，负责接收前一节点的文本，调用`embeddingClient`进行向量化，并将向量结果发送给下一节点 <br/>
+
+效果：
+![调用BGE-m3返回1024维向量](asset/embed_test.png)

@@ -112,7 +112,7 @@ func (c *EmbeddingClient) Embed(texts []string) ([][]float32, error) {
 	for _, item := range result.Data {
 		embeddings[item.Index] = item.Embedding
 	}
-
+	fmt.Print(len(embeddings[0]))
 	return embeddings, nil
 }
 

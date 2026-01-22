@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"go-rag/config"
 	"go-rag/models"
+	"go-rag/pkg/embedding"
 	"go-rag/rag"
 	"log"
 	"os"
@@ -10,11 +12,11 @@ import (
 )
 
 func main() {
-	// // 加载配置文件
-	// config, err := config.LoadConfig("config/config.yaml")
-	// if err != nil {
-	// 	log.Fatalf("加载配置失败： %v", err)
-	// }
+	// 加载配置文件
+	config, err := config.LoadConfig("config/config.yaml")
+	if err != nil {
+		log.Fatalf("加载配置失败： %v", err)
+	}
 
 	// fmt.Printf("配置调试：%+v", config)
 
@@ -36,6 +38,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("切割错误: %v", err)
 	}
+
+	// APIEmbedder测试
+	client := embedding.NewEmbeddingClient(config.EmbeddingAPI.BaseURL, config.EmbeddingAPI.APIKey, config.EmbeddingAPI.Model)
+	embedder := rag.NewAPIEmbedder(client, 10)
+	embedder.EmbedChunks(chunks)
+
 	for _, chunk := range chunks {
 		fmt.Printf("\n %+v \n", chunk)
 	}
