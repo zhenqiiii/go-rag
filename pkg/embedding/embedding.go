@@ -43,7 +43,7 @@ type EmbeddingResponse struct {
 	Data   []struct {
 		Object    string    `json:"Object"`    // 任务类型（可以这么翻译吧应该）
 		Embedding []float32 `json:"embedding"` // 向量
-		Index     int       `json:"index"`     // 索引
+		Index     int       `json:"index"`     // 索引,即模型API返回的向量的顺序
 	} `json:"data"`
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`
@@ -112,7 +112,7 @@ func (c *EmbeddingClient) Embed(texts []string) ([][]float32, error) {
 	for _, item := range result.Data {
 		embeddings[item.Index] = item.Embedding
 	}
-	fmt.Print(len(embeddings[0]))
+	// fmt.Print(len(embeddings[0]))
 	return embeddings, nil
 }
 

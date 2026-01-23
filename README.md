@@ -23,7 +23,7 @@ RAG：
 #### chunker
 分割策略:固定长度切分,同时在标点符号处切分 
 
-效果: <br/>
+测试效果: <br/>
 ![chunker效果测试](asset/chunk_result.png)
 
 #### embedder
@@ -34,5 +34,39 @@ RAG：
 
 `embedder`：是整个pipeline中的embed组件，负责接收前一节点的文本，调用`embeddingClient`进行向量化，并将向量结果发送给下一节点 <br/>
 
-效果：
+测试效果：
 ![调用BGE-m3返回1024维向量](asset/embed_test.png)
+
+
+#### store
+接入Qdrant向量库实现 <br/>
+
+目前的搜索逻辑非常简单：基于余弦相似度，返回`top-K`个分数最高的向量
+```
+文档入库流程：
+Document → Chunker → Chunks → Embedder → Vectors → Qdrant.AddChunks()
+                                                         ↓
+                                                    Points (id, vector, payload)
+
+查询流程：
+Query → Embedder → QueryVector → Qdrant.Search() → Top-K Results
+                                                      ↓
+                                         RetrievalResult[chunk, score]
+
+删除流程：
+DocumentID → Qdrant.Delete() → Filter by document_id → Delete Points
+```
+
+测试效果：
+```go
+query := "什么是Golang"
+	embeddedQuery, err := embedder.EmbedQuery(query)
+	if err != nil {
+		log.Fatalf("向量化query失败: %v", err)
+	}
+	results, err := store.Search(embeddedQuery, 3)
+	if err != nil {
+		log.Fatalf("查询失败: %v", err)
+	}
+```
+![search结果](/asset/retrieve_result.png)

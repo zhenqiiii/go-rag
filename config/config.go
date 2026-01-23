@@ -34,6 +34,7 @@ type QdrantConfig struct {
 	Host       string `mapstructure:"host"`
 	Port       int    `mapstructure:"port"`
 	Collection string `mapstructure:"collection"`
+	Dimension  int    `mapstructure:"dimension"`
 }
 
 // Embedding API配置

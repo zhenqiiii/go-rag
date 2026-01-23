@@ -49,12 +49,12 @@ func NewChunk(documentID string, content string, index int) *Chunk {
 // 检索结果
 type RetrievalResult struct {
 	Chunk Chunk   `json:"chunk"` // 检索到的分片
-	Score float64 `json:"score"` // 相似度分数
+	Score float32 `json:"score"` // 相似度分数
 }
 
 // rag查询请求
 type RAGRequest struct {
-	Query string `json:"query", binding:"required`
+	Query string `json:"query" binding:"required"`
 	TopK  int    `json:"top_k"`
 }
 

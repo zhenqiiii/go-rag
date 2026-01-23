@@ -42,9 +42,32 @@ func main() {
 	// APIEmbedder测试
 	client := embedding.NewEmbeddingClient(config.EmbeddingAPI.BaseURL, config.EmbeddingAPI.APIKey, config.EmbeddingAPI.Model)
 	embedder := rag.NewAPIEmbedder(client, 10)
-	embedder.EmbedChunks(chunks)
+	embedder.EmbedChunks(chunks) //向量化并将向量返回到chunks中
 
-	for _, chunk := range chunks {
-		fmt.Printf("\n %+v \n", chunk)
+	// store 测试
+	store := rag.NewQdrantStore(config.Qdrant.Host, config.Qdrant.Port, config.Qdrant.Collection, config.Qdrant.Dimension)
+	// c初始化一下
+	err = store.Init()
+	if err != nil {
+		log.Fatalf("初始化store组件实例失败: %v", err)
+	}
+	// 添加chunk
+	err = store.AddChunks(chunks)
+	if err != nil {
+		log.Fatalf("添加chunk失败: %v", err)
+	}
+	// 向量化query并进行search
+	query := "什么是Golang"
+	embeddedQuery, err := embedder.EmbedQuery(query)
+	if err != nil {
+		log.Fatalf("向量化query失败: %v", err)
+	}
+	results, err := store.Search(embeddedQuery, 3)
+	if err != nil {
+		log.Fatalf("查询失败: %v", err)
+	}
+
+	for _, result := range results {
+		fmt.Printf("%+v \n", result)
 	}
 }
