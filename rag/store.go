@@ -163,13 +163,15 @@ func (qs *QdrantStore) Search(queryVector []float32, topK int) ([]models.Retriev
 	// 进行向量搜索
 	searchResult, err := qs.client.Query(ctx, &qdrant.QueryPoints{
 		CollectionName: qs.collection,
-		Query:          qdrant.NewQueryDense(queryVector),
-		Limit:          qdrant.PtrOf(uint64(topK)),
-		WithPayload:    qdrant.NewWithPayload(true),
+		Query:          qdrant.NewQueryDense(queryVector), // query的vector
+		Limit:          qdrant.PtrOf(uint64(topK)),        // 搜索个数
+		WithPayload:    qdrant.NewWithPayload(true),       // 返回payload
 		ScoreThreshold: nil,
 		// 查看这个QueryPoints结构体的字段了解更多可以设置的参数
 		// Params,Fliter等等
-		// 目前的策略是简单的基于余弦相似度的最近邻搜索,返回top-K个分数最高的chunk,分数阈值后面看情况设
+		// 目前的策略是简单的基于余弦相似度的最近邻搜索,返回top-K个分数最高的chunk
+		// 后续可以使用Fliter实现基于关键词的搜索,最终达到混合检索的效果
+		// 分数阈值的过滤逻辑到后面的检索Retirever组件去做:拿到结果后遍历,只取高于阈值的chunk
 	})
 	if err != nil {
 		return nil, fmt.Errorf("向量搜索失败: %w", err)
