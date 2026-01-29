@@ -72,7 +72,7 @@ func (lg *LLMGenerator) Generate(query string, contexts []models.Chunk) (string,
 		SystemPrompt,
 		userPrompt,
 		0.3,
-		1024,
+		2000,
 	)
 	if err != nil {
 		return "", fmt.Errorf("LLM生成失败： %w", err)

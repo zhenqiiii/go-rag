@@ -88,9 +88,31 @@ query := "Golang的应用场景有哪些？"
 ![generate测试结果2](/asset/generate_result2.png)
 
 
+#### pipeline
+把模型换成了`glm-4.7-flashx`,然后简单试了一下pipeline的效果:
+
+![pipeline的最终效果](/asset/pipeline_test.png)
+
+感觉还是有很大问题的,过程中碰到了些小插曲,然后`maxTokens`调了一下才正
+
+常显示这些内容,输出中提到信息中断,那肯定`chunker`组件也有问题,或者是
+
+`scoreThreshold`出问题了?
 
 
+![调试](/asset/pipeline_test2.png)
 
+这次把整个`RAGResponse`结构体都打印了出来,`usedChunks`是6没问题,输出的
+
+`chunk`也没啥问题,可能是`maxTokens`设太小了?但是我设了2000的,应该完全
+
+够输出啊? 晕
+
+破案了:切分的问题,给的6个`chunk`里面没有完整信息哈哈,多给几个试试
+
+![找到问题](/asset/pipeline_test3.png)
+
+解决方法的话,调大`chunkSize`或者`topK`应该都可以，主要是信息没给全
 
 ## 其他
 
