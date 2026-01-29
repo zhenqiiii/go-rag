@@ -71,6 +71,27 @@ query := "什么是Golang"
 ```
 ![search结果](/asset/retrieve_result.png)
 
+
+#### generator
+调用的是`Qwen3-8B`，但是感觉因为之前进行过两次重复的`Golang.txt`文件的embedding，导致检索结果有重叠，使得参考的内容灰常有限
+
+```go
+query := "什么是Golang"
+```
+
+![generate测试结果](/asset/generate_result.png)
+
+```go
+query := "Golang的应用场景有哪些？"
+```
+
+![generate测试结果2](/asset/generate_result2.png)
+
+
+
+
+
+
 ## 其他
 
 ### 关于余弦相似度
@@ -87,3 +108,5 @@ Qdrant返回的分数也是如此，在-1 ~ 1之间
 ![qdrant文档给出的说明](/asset/qdrant_cosine.png)
 
 > 一开始看[wiki](https://zh.wikipedia.org/wiki/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E6%80%A7)以为是0~1（正向空间）来着，没想到
+
+
