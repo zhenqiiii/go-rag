@@ -17,12 +17,14 @@ func SetupRouter() *gin.Engine {
 	rag := r.Group("api/rag")
 	{
 		// 查询路由
-		rag.POST("/query", handlers.RAGQuery())
+		rag.POST("/query", handlers.SubmitQuery())
 
-		// 文档管理
-		rag.POST("/upload", handlers.UploadDocument())
-		rag.POST("/delete/:id", handlers.DeleteDocument())
-		rag.GET("/documents", handlers.GetDocuments())
+		// 文档管理:RESTful
+		rag.GET("/documents", handlers.GetDocuments())           // 获取完整上传文档列表
+		rag.GET("documents/:id", handlers.GetSpecificDocument()) //获取id对应的文档
+		rag.POST("/documents", handlers.UploadDocument())        // 上传文档
+		rag.DELETE("/documents/:id", handlers.DeleteDocument())  // 删除对应id文档
+
 	}
 
 	return r
