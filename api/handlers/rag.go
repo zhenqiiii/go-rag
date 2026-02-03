@@ -28,7 +28,7 @@ type RAGQueryResponse struct {
 	Sources    []models.RetrievalResult `json:"sources"`     // 检索到的文档chunks
 	UsedChunks int                      `json:"used_chunks"` // 实际使用chunks数量
 	Latency    int64                    `json:"latency"`     // 总耗时（ms）
-	Timestamp  string                   `json:"timestamp"`   // 响应时间
+	Timestamp  string                   `json:"timestamp"`   // 响应时间(即何时响应)
 }
 
 // Query路由处理
@@ -36,9 +36,9 @@ func SubmitQuery(pipeline *rag.RAGPipeline) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
 
-		// 解析请求
+		// 获取请求参数
 		var req RAGQueryRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := c.ShouldBind(&req); err != nil {
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{
 				Success: false,
 				Error:   "请求参数错误：" + err.Error(),
@@ -53,6 +53,7 @@ func SubmitQuery(pipeline *rag.RAGPipeline) gin.HandlerFunc {
 		}
 
 		// 检查是否启动流式输出
+		// TODO：流式输出
 
 		// stream = false,进行非流式处理
 		handleNormalQuery(c, pipeline, req, startTime)
@@ -63,5 +64,32 @@ func SubmitQuery(pipeline *rag.RAGPipeline) gin.HandlerFunc {
 
 // handleNormalQuery 处理非流式查询
 func handleNormalQuery(c *gin.Context, pipeline *rag.RAGPipeline, req RAGQueryRequest, startTime time.Time) {
+	// 调用pipeline
+	// response中有三个字段：
+	// Answer：回答
+	// Sources：检索到的chunks
+	//  UsedChunk：使用的chunk数
+	response, err := pipeline.Query(req.Query, req.TopK)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Success: false,
+			Error:   "查询失败：" + err.Error(),
+			Code:    code.INTERNAL_ERROR,
+		})
+		return
+	}
+
+	// 计算延迟
+	latency := time.Since(startTime).Milliseconds()
+
+	// 返回响应
+	c.JSON(http.StatusOK, RAGQueryResponse{
+		Success:    true,
+		Answer:     response.Answer,
+		Sources:    response.Sources,
+		UsedChunks: response.UsedChunks,
+		Latency:    latency,
+		Timestamp:  time.Now().Format(time.RFC3339),
+	})
 
 }
