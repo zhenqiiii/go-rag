@@ -24,10 +24,10 @@ func SetupRouter(pipeline *rag.RAGPipeline) *gin.Engine {
 		rag.POST("/query", handlers.SubmitQuery(pipeline))
 
 		// 文档管理:RESTful
-		rag.GET("/documents", handlers.GetDocuments())            // 获取完整上传文档列表
-		rag.GET("documents/:id", handlers.GetSpecificDocument())  //获取id对应的文档
-		rag.POST("/documents", handlers.UploadDocument(pipeline)) // 上传文档
-		rag.DELETE("/documents/:id", handlers.DeleteDocument())   // 删除对应id文档
+		rag.GET("/documents", handlers.GetDocuments())                  // 获取完整上传文档列表
+		rag.GET("documents/:id", handlers.GetSpecificDocument())        //获取id对应的文档
+		rag.POST("/documents", handlers.UploadDocument(pipeline))       // 上传文档
+		rag.DELETE("/documents/:id", handlers.DeleteDocument(pipeline)) // 删除对应id文档
 
 	}
 

@@ -102,11 +102,41 @@ func UploadDocument(pipeline *rag.RAGPipeline) gin.HandlerFunc {
 	}
 }
 
+type DeleteDocumentResponse struct {
+	Success       bool   `json:"success"`
+	DocumentID    string `json:"document_id"`
+	DeletedChunks int    `json:"deleted_chunks"` // 删除的切片数,这个数据应该在文档库中获取
+	Timestamp     string `json:"timestamp"`
+}
+
 // DeleteDocument 删除文件路由
-func DeleteDocument() gin.HandlerFunc {
+func DeleteDocument(pipeline *rag.RAGPipeline) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 接收文件信息
-		// 进行删除操作：向量库删除所有切片
+		// 获取路径参数id
+		documentID := c.Param("id")
+
+		// TODO：检查文档是否存在（文档表中）
+
+		// 在向量库中删除所有切片
+		err := pipeline.DeleteDocument(documentID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Success: false,
+				Error:   "删除向量失败：" + err.Error(),
+				Code:    code.INTERNAL_ERROR,
+			})
+			return
+		}
+
+		// TODO：从文档表中删除
+
+		// 返回响应
+		c.JSON(http.StatusOK, DeleteDocumentResponse{
+			Success:    true,
+			DocumentID: documentID,
+			Timestamp:  time.Now().Format(time.RFC3339),
+		})
+
 	}
 }
 
