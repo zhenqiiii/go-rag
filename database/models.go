@@ -31,11 +31,11 @@ func (DocumentDB) TableName() string {
 // GetDocumentByID 顾名思义
 //
 // 接收文档ID，返回DocumentDB对象+error
-func GetDocumentByID(id string) (*DocumentDB, error) {
+func (this *DB) GetDocumentByID(id string) (*DocumentDB, error) {
 	var document DocumentDB
 	// 查询操作
 	// 未查询到记录时，First方法返回ErrorRecordNotFound错误
-	if err := db.Where("id = ?", id).First(&document).Error; err != nil {
+	if err := this.db.Where("id = ?", id).First(&document).Error; err != nil {
 		return nil, err
 	}
 
@@ -46,10 +46,10 @@ func GetDocumentByID(id string) (*DocumentDB, error) {
 // GetAllDocuments 获取所有文档的列表
 //
 // 没有入参，返回DocumentDB的slice+error
-func GetAllDocuments() ([]DocumentDB, error) {
+func (this *DB) GetAllDocuments() ([]DocumentDB, error) {
 	var documents []DocumentDB
 	// 直接检索全部对象(Find方法没有找到记录时不会报错)
-	if err := db.Find(&documents).Error; err != nil {
+	if err := this.db.Find(&documents).Error; err != nil {
 		return nil, err
 	}
 	// 检索成功
@@ -60,12 +60,37 @@ func GetAllDocuments() ([]DocumentDB, error) {
 //
 // 入参： 文档的ID
 // 返回： error
-func DeleteDocument(id string) error {
+func (this *DB) DeleteDocument(id string) error {
 	// // 通过主键删除
 	// db.Delete(&DocumentDB{}, id)
 	// 或者是这样声明一个匿名对象进行匹配删除
-	if err := db.Delete(&DocumentDB{ID: id}).Error; err != nil {
+	if err := this.db.Delete(&DocumentDB{ID: id}).Error; err != nil {
 		return err
 	}
 	return nil
+}
+
+// InsertDocument 传入新文件记录
+//
+// 入参: DocumentDB模型对象
+func (this *DB) InsertDocument(doc *DocumentDB) error {
+	// 创建记录
+	if err := this.db.Create(doc).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// CheckDocumentExists 检查文档是否存在
+func (this *DB) CheckDocumentExists(id string) (bool, error) {
+	// 使用Find进行检索
+	result := this.db.Find(&DocumentDB{ID: id})
+	if err := result.Error; err != nil {
+		return false, err
+	}
+	// 不存在
+	if result.RowsAffected == 0 {
+		return false, nil
+	}
+	return true, nil
 }

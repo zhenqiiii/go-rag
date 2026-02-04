@@ -18,14 +18,15 @@ func main() {
 		log.Fatalf("加载配置失败: %v", err)
 	}
 
-	// SQL使用一个全局实例db进行操作
+	// 创建DB实例(MySQL)
+	DB := database.NewDB()
 	// 初始化MySQL数据库
-	if err := database.InitMySQL(config.MySQL); err != nil {
+	if err := DB.InitDB(config.MySQL); err != nil {
 		log.Fatalf("初始化MySQL数据库失败: %v", err)
 	}
 
-	// 退出时关闭数据库连接
-	defer database.CloseMySQL()
+	// 退出程序时关闭数据库连接
+	defer DB.CloseDB()
 
 	// 启动RAG服务
 	// 根据config文件配置好pipeline
@@ -68,7 +69,7 @@ func main() {
 	)
 
 	// 启动后端服务并注入rag服务和数据库（TODO）
-	r := api.SetupRouter(pipeline)
+	r := api.SetupRouter(pipeline, DB)
 	// 小马快跑 🐎💨
 	r.Run(fmt.Sprintf(":%d", config.Server.Port))
 }

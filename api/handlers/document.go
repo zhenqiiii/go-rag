@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"go-rag/api/code"
+	"go-rag/database"
 	"go-rag/models"
 	"go-rag/rag"
 	"io"
@@ -12,11 +13,34 @@ import (
 )
 
 // 文档操作的处理函数
+type GetDocumentsResponse struct {
+	Success       bool                  `json:"success"`
+	DocumentList  []database.DocumentDB `json:"document_list"`
+	DocumentCount int                   `json:"document_count"`
+	Timestamp     string                `json:"timestamp"` // 响应时间点
+}
 
 // GetDocuments 获取文档列表
-func GetDocuments() gin.HandlerFunc {
+func GetDocuments(db *database.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 从MySQL中读取文档并返回
+		documents, err := db.GetAllDocuments()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Success: false,
+				Error:   "获取文件列表失败：" + err.Error(),
+				Code:    code.INTERNAL_ERROR,
+			})
+			return
+		}
+
+		// 获取成功，返回文档列表
+		c.JSON(http.StatusOK, GetDocumentsResponse{
+			Success:       true,
+			DocumentList:  documents,
+			DocumentCount: len(documents),
+			Timestamp:     time.Now().Format(time.RFC3339),
+		})
 	}
 }
 
@@ -27,13 +51,13 @@ type UploadDocumentResponse struct {
 	ChunkCount     int      `json:"chunk_count"`
 	ChunkIDs       []string `json:"chunk_ids"`
 	ProcessingTime int64    `json:"processing_time"` // 处理耗时（毫秒）
-	Timestamp      string   `json:"timestamp"`       // 响应时间
+	Timestamp      string   `json:"timestamp"`       // 响应时间点
 }
 
 // document upload路由处理
 //
 // 接收上传的文件
-func UploadDocument(pipeline *rag.RAGPipeline) gin.HandlerFunc {
+func UploadDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		// 接收文件:文件通过form表单提交
@@ -87,9 +111,23 @@ func UploadDocument(pipeline *rag.RAGPipeline) gin.HandlerFunc {
 			return
 		}
 
-		// TODO：设置一个文档表-Mysql或者sqlite，暂时考虑只存放文档名称等必要信息，不存放内容
+		// 创建Document数据库模型对象,存入MySQL
+		document_db := &database.DocumentDB{
+			ID:         document.ID,
+			Filename:   document.Filename,
+			ChunkCount: result.ChunkCount,
+		}
+		err = db.InsertDocument(document_db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Success: false,
+				Error:   "文档记录创建失败：" + err.Error(),
+				Code:    code.INTERNAL_ERROR,
+			})
+			return
+		}
 
-		// 返回响应
+		// 处理成功,返回响应
 		c.JSON(http.StatusOK, UploadDocumentResponse{
 			Success:        true,
 			DocumentID:     result.DocumentID,
@@ -110,15 +148,30 @@ type DeleteDocumentResponse struct {
 }
 
 // DeleteDocument 删除文件路由
-func DeleteDocument(pipeline *rag.RAGPipeline) gin.HandlerFunc {
+func DeleteDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取路径参数id
 		documentID := c.Param("id")
 
-		// TODO：检查文档是否存在（文档表中）
+		// 检查文档是否存在（文档表中）
+		ok, err := db.CheckDocumentExists(documentID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Success: false,
+				Error:   "文档检索失败：" + err.Error(),
+				Code:    code.INTERNAL_ERROR,
+			})
+		}
+		if ok != true {
+			c.JSON(http.StatusBadRequest, models.ErrorResponse{
+				Success: false,
+				Error:   "文档不存在: " + err.Error(),
+				Code:    code.NOT_FOUND,
+			})
+		}
 
 		// 在向量库中删除所有切片
-		err := pipeline.DeleteDocument(documentID)
+		err = pipeline.DeleteDocument(documentID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 				Success: false,
@@ -128,7 +181,15 @@ func DeleteDocument(pipeline *rag.RAGPipeline) gin.HandlerFunc {
 			return
 		}
 
-		// TODO：从文档表中删除
+		// 从文档表中删除
+		if err = db.DeleteDocument(documentID); err != nil {
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Success: false,
+				Error:   "删除文档记录失败：" + err.Error(),
+				Code:    code.INTERNAL_ERROR,
+			})
+			return
+		}
 
 		// 返回响应
 		c.JSON(http.StatusOK, DeleteDocumentResponse{
