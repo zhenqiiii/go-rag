@@ -46,10 +46,26 @@ func GetDocumentByID(id string) (*DocumentDB, error) {
 // GetAllDocuments 获取所有文档的列表
 //
 // 没有入参，返回DocumentDB的slice+error
-func GetAllDocuments() ([]DocumentDB, error)
+func GetAllDocuments() ([]DocumentDB, error) {
+	var documents []DocumentDB
+	// 直接检索全部对象(Find方法没有找到记录时不会报错)
+	if err := db.Find(&documents).Error; err != nil {
+		return nil, err
+	}
+	// 检索成功
+	return documents, nil
+}
 
 // DeleteDocument 删除文档（由gorm执行软删除）
 //
-// 入参： 文档ID
+// 入参： 文档的ID
 // 返回： error
-func DeleteDocument(id string) error
+func DeleteDocument(id string) error {
+	// // 通过主键删除
+	// db.Delete(&DocumentDB{}, id)
+	// 或者是这样声明一个匿名对象进行匹配删除
+	if err := db.Delete(&DocumentDB{ID: id}).Error; err != nil {
+		return err
+	}
+	return nil
+}

@@ -16,7 +16,7 @@ import (
 // GetDocuments 获取文档列表
 func GetDocuments() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 从sqlite中读取文档id并返回
+		// 从MySQL中读取文档并返回
 	}
 }
 

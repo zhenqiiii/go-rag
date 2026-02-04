@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-rag/api"
 	"go-rag/config"
+	"go-rag/database"
 	"go-rag/pkg/embedding"
 	"go-rag/pkg/llm"
 	"go-rag/rag"
@@ -14,10 +15,17 @@ func main() {
 	// 加载配置文件
 	config, err := config.LoadConfig("config/config.yaml")
 	if err != nil {
-		log.Fatalf("加载配置失败： %v", err)
+		log.Fatalf("加载配置失败: %v", err)
 	}
 
-	// TODO:初始化数据库
+	// SQL使用一个全局实例db进行操作
+	// 初始化MySQL数据库
+	if err := database.InitMySQL(config.MySQL); err != nil {
+		log.Fatalf("初始化MySQL数据库失败: %v", err)
+	}
+
+	// 退出时关闭数据库连接
+	defer database.CloseMySQL()
 
 	// 启动RAG服务
 	// 根据config文件配置好pipeline

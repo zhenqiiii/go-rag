@@ -22,6 +22,9 @@ type Config struct {
 
 	// RAG参数
 	RAG RAGConfig `mapstructure:"rag"`
+
+	// MySQL配置
+	MySQL MySQLConfig `mapstructure:"mysql"`
 }
 
 // web后端服务器配置
