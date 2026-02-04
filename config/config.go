@@ -60,6 +60,15 @@ type RAGConfig struct {
 	ScoreThreshold float64 `mapstructure:"score_threshold"` // 相似度阈值
 }
 
+// MySQLConfig MySQL数据库配置
+type MySQLConfig struct {
+	Host     string `mapstructure:"host"`     // 数据库主机地址
+	Port     int    `mapstructure:"port"`     // 数据库端口
+	User     string `mapstructure:"user"`     // 用户名
+	Password string `mapstructure:"password"` // 密码
+	Database string `mapstructure:"database"` // db名称
+}
+
 // LoadConfig 从文件中加载配置
 //
 // configpath: config/config.yaml
@@ -107,6 +116,14 @@ func setDefaults() {
 	viper.SetDefault("rag.chunk_overlap", 50)
 	viper.SetDefault("rag.top_k", 5)
 	viper.SetDefault("rag.score_threshold", 0.7)
+
+	// MySQL默认配置
+	viper.SetDefault("mysql.host", "localhost")
+	viper.SetDefault("mysql.host", 3306)
+	viper.SetDefault("mysql.host", "root")
+	viper.SetDefault("mysql.host", "")
+	viper.SetDefault("mysql.host", "document_db")
+	viper.SetDefault("mysql.host", "utf8mb4")
 }
 
 // validateConfig 验证配置有效性
