@@ -202,6 +202,8 @@ func DeleteDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc 
 }
 
 // GetSpecificDocument 获取id对应的文档
+//
+// 如果数据库不存content，那这个路由就没有用
 func GetSpecificDocument() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 根据id获取文档
