@@ -4,6 +4,7 @@ import (
 	"go-rag/api/code"
 	"go-rag/database"
 	"go-rag/models"
+	"go-rag/pkg/file_parser"
 	"go-rag/rag"
 	"io"
 	"net/http"
@@ -84,20 +85,63 @@ func UploadDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc 
 			return
 		}
 
-		// TODO：类型判断+对应解析逻辑
-
-		//读取
-		fileBytes, err := io.ReadAll(fileHandle)
+		// 获取文件前262个字节，用于判断类型
+		buf := make([]byte, 262)
+		_, err = fileHandle.Read(buf)
+		if err != nil && err != io.EOF {
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Success: false,
+				Error:   "预读取文件失败：" + err.Error(),
+				Code:    code.INTERNAL_ERROR,
+			})
+			return
+		}
+		// 判断类型
+		fileType, err := file_parser.GetFileType(buf)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 				Success: false,
-				Error:   "读取文件失败：" + err.Error(),
+				Error:   "判断文件类型失败：" + err.Error(),
 				Code:    code.INTERNAL_ERROR,
 			})
 			return
 		}
 
-		content := string(fileBytes)
+		// 检查是否支持
+		support := file_parser.CheckTypeSupport(fileType)
+		if !support {
+			c.JSON(http.StatusBadRequest, models.ErrorResponse{
+				Success: false,
+				Error:   "不支持该文件类型",
+				Code:    code.UNSUPPORTED,
+			})
+			return
+		}
+
+		// 获取Parser实例，解析文件内容
+		parser := file_parser.GetParser(fileType)
+		content, err := parser.Parse(fileHandle)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Success: false,
+				Error:   "解析文件失败：" + err.Error(),
+				Code:    code.INTERNAL_ERROR,
+			})
+			return
+		}
+
+		// //读取
+		// fileBytes, err := io.ReadAll(fileHandle)
+		// if err != nil {
+		// 	c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+		// 		Success: false,
+		// 		Error:   "读取文件失败：" + err.Error(),
+		// 		Code:    code.INTERNAL_ERROR,
+		// 	})
+		// 	return
+		// }
+
+		// content := string(fileBytes)
 
 		// 创建文档对象
 		document := models.NewDocument(filename, content)
