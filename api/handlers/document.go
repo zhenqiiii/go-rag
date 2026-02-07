@@ -84,6 +84,8 @@ func UploadDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc 
 			return
 		}
 
+		// TODO：类型判断+对应解析逻辑
+
 		//读取
 		fileBytes, err := io.ReadAll(fileHandle)
 		if err != nil {
