@@ -6,7 +6,6 @@ import (
 	"go-rag/models"
 	"go-rag/pkg/file_parser"
 	"go-rag/rag"
-	"io"
 	"net/http"
 	"time"
 
@@ -84,11 +83,13 @@ func UploadDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc 
 			})
 			return
 		}
+		// 处理完后要进行关闭
+		defer fileHandle.Close()
 
-		// 获取文件前262个字节，用于判断类型
+		// 通过Magic Bytes判断:获取文件前262个字节，用于判断类型
 		buf := make([]byte, 262)
 		_, err = fileHandle.Read(buf)
-		if err != nil && err != io.EOF {
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 				Success: false,
 				Error:   "预读取文件失败：" + err.Error(),
@@ -96,8 +97,8 @@ func UploadDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc 
 			})
 			return
 		}
-		// 判断类型
-		fileType, err := file_parser.GetFileType(buf)
+		// 判断类型: 传入Magic Bytes +filename
+		fileType, err := file_parser.GetFileType(buf, filename)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 				Success: false,
@@ -129,19 +130,6 @@ func UploadDocument(pipeline *rag.RAGPipeline, db *database.DB) gin.HandlerFunc 
 			})
 			return
 		}
-
-		// //读取
-		// fileBytes, err := io.ReadAll(fileHandle)
-		// if err != nil {
-		// 	c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-		// 		Success: false,
-		// 		Error:   "读取文件失败：" + err.Error(),
-		// 		Code:    code.INTERNAL_ERROR,
-		// 	})
-		// 	return
-		// }
-
-		// content := string(fileBytes)
 
 		// 创建文档对象
 		document := models.NewDocument(filename, content)
